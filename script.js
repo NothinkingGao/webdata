@@ -400,39 +400,42 @@ d3.csv("baise.csv").then(function(data) {
 
   for (var i = data.length - 1; i >= 0; i--) {
     var ratings = parseFloat(data[i].ratings);
-    if(ratings < 2){
+
+    if (ratings == 0) {
+        stars["0"] += 1;
+    }
+    else if (ratings >= 1 && ratings < 1.5) {
+      stars["1"] += 1;
+    } else if (ratings >= 1.5 && ratings < 2) {
       stars["1.5"] += 1;
-    }else if(ratings >=2 && ratings < 2.5){
+    } else if (ratings >= 2 && ratings < 2.5) {
       stars["2"] += 1;
-    }else if(ratings >= 2.5 && ratings < 3){
+    } else if (ratings >= 2.5 && ratings < 3) {
       stars["2.5"] += 1;
-    }else if(ratings >=3 && ratings < 3.5){
+    } else if (ratings >= 3 && ratings < 3.5) {
       stars["3"] += 1;
-    }else if(ratings >=3.5 && ratings < 4){
+    } else if (ratings >= 3.5 && ratings < 4) {
       stars["3.5"] += 1;
-    }else if(ratings >=4 && ratings <4.5){
+    } else if (ratings >= 4 && ratings < 4.5) {
       stars["4"] += 1;
-    }else if(ratings >=4.5 && ratings <5){
+    } else if (ratings >= 4.5 && ratings < 5) {
       stars["4.5"] += 1;
-    }else if(ratings >= 5){
+    } else if (ratings >= 5 && ratings < 5.5) {
       stars["5"] += 1;
     }
   }
   console.log(stars);
 
+  var starData = new Array();
+  for (const [key, value] of Object.entries(stars)) {
+    starData.push({  grade: key, score: value});
+    starData.sort(function(a, b) {
+      return parseFloat(a.grade) - parseFloat(b.grade);
+    })
+  }
+
   var total = data.length;
-
-  const starData = [
-      {score: 133, grade: 2},
-      {score: 452, grade: 3},
-      {score: 1655, grade: 4},
-      {score: 11643, grade: 5},
-      {score: 807, grade: 1.5},
-      {score: 458, grade: 2.5},
-      {score: 1106, grade: 3.5},
-      {score: 4330, grade: 4.5}
-    ];
-
+  console.log(starData);
     drawRectange(starData);
     drawDonutChart(stars);
 });
