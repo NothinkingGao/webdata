@@ -64,6 +64,10 @@ function drawDonutChart(starData,length){
     const outerArc = d3.arc()
       .innerRadius(radius * 0.9)
       .outerRadius(radius * 0.9)
+    
+
+
+    
 
     // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
     svg
@@ -76,9 +80,23 @@ function drawDonutChart(starData,length){
       .style("stroke-width", "2px")
       .style("opacity", 0.7)
       .on('mouseover', function (d, i) {
-        d3.select(this).transition()
-            .duration('50')
-            .attr('opacity', '.65');
+
+
+        const zoom = d3.zoom()
+        .scaleExtent([1, 40])
+        .on("zoom", zoomed);
+  
+        function zoomed() {
+          d3.select(this).attr("transform", d3.event.transform);
+        }
+
+        console.log(d3.select(this));
+        d3.select(this).call(zoom.transform, d3.zoomIdentity.scale(1.1));
+
+        // d3.select(this).transition()
+        //     .duration('50')
+        //     .attr('opacity', '.65');
+
         donutTip.transition()
             .duration(50)
             .style("opacity", 1);
@@ -161,6 +179,159 @@ function drawDonutChart(starData,length){
           .text(function(d) { return d.data[1]; });
 }
 
+function drawDonutChart2(starData,length){
+         // set the dimensions and margins of the chart
+         const width = 1000;
+         const height = 640;
+         const margin = 40;
+   
+          console.log(starData)
+
+        var donutTip = d3.select("body").append("div")
+        .attr("class", "donut-tip")
+        .style("opacity", 0);
+
+          const svg = d3.select("#pie")
+          .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+          .append("g")
+            .attr("transform", `translate(${width/2},${height/2})`);
+         // set the radius
+         const radius = Math.min(width, height) / 3.5 - margin;
+   
+         // create the donut chart
+         const chart = d3
+           .select("#donut")
+           .attr("width", width)
+           .attr("height", height)
+           .append("g")
+           .attr("transform", `translate(${width / 2}, ${height / 2})`);
+   
+         const pie = d3
+           .pie()
+           .value((d) => d[1])
+           .sort(null);
+         
+         const data_ready = pie(Object.entries(starData))
+         console.log(data_ready)
+
+          // set the color scale
+          const color = d3
+          .scaleOrdinal()
+          .domain(data_ready.map((d) => d.data[0]))
+          .range(d3.schemeCategory10);
+   
+         const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius);
+
+         const arc2 = d3.arc().innerRadius(radius).outerRadius(radius);
+
+         const outerArc = d3.arc()
+          .innerRadius(radius * 1.5)
+          .outerRadius(radius * 1.8)
+   
+         const slices = chart
+           .selectAll(".slice")
+           .data(data_ready)
+           .enter()
+           .append("g")
+           .attr("class", "slice");
+   
+         slices
+           .append("path")
+           .attr("d", arc)
+           .attr("fill", (d) => color(d.data[0]));
+   
+         slices
+           .append("text")
+           .text((d) => d.data[0])
+           .attr("transform", (d) => `translate(${arc.centroid(d)})`)
+           .style("pointer-events", "none");
+   
+         // add interactivity
+         slices.on("mouseover", function (event, d) {
+           d3.select(this).select("path").transition().duration(200).attr("d", d3.arc().innerRadius(radius * 0.6).outerRadius(radius * 1.1));
+
+           donutTip.transition()
+                .duration(50)
+                .style("opacity", 1);
+
+          let num = '人数:' +d.value +"占比:" + (d.value/length * 100).toFixed(2).toString() + '%';
+          donutTip.html(num)
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY- 15) + "px");
+         });
+   
+         slices.on("mouseout", function (event, d) {
+           d3.select(this).select("path").transition().duration(200).attr("d", arc);
+           donutTip.transition()
+            .duration('50')
+            .style("opacity", 0);
+         });
+
+
+          // Add the polylines between chart and labels:
+          chart
+          .selectAll('allPolylines')
+          .data(data_ready)
+          .join('polyline')
+            .attr("stroke", "black")
+            .style("fill", "none")
+            .attr("stroke-width", 1)
+            .attr('points', function(d) {
+              const posA = arc2.centroid(d) // line insertion in the slice
+              const posB = outerArc.centroid(d) // line break: we use the other arc generator that has been built only for that
+              console.log(posB)
+              const posC = outerArc.centroid(d); // Label position = almost the same as posB
+              const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2 // we need the angle to see if the X position will be at the extreme right or extreme left
+              posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1); // multiply by 1 or -1 to put it on the right or on the left
+              return [posA, posB, posC]
+            })
+
+        // Add the polylines between chart and labels:
+        chart
+          .selectAll('allLabels')
+          .data(data_ready)
+          .style("fill", function(d) { return color(d.data[0]); })
+          .join('text')
+            .text(function(d){ 
+              //
+              return "评分:" +d.data[0] + "人数:" + d.value + "\n" + "占比:" + (d.value / length * 100).toFixed(2) + "%";
+            })
+            .attr('transform', function(d) {
+                const pos = outerArc.centroid(d);
+                const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+                pos[0] = radius * 0.99 * (midangle < Math.PI ? 1 : -1);
+                return `translate(${pos})`;
+            })
+            .style('text-anchor', function(d) {
+                const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+                return (midangle < Math.PI ? 'start' : 'end')
+            })
+
+         // Add a legend to the pie chart
+        var legend = chart.selectAll(".legend")
+        .data(data_ready)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("fill", function(d) { return color(d.data[0]); })
+        .attr("transform", function(d, i) { 
+              return "translate(" + (400) + "," + (-height / 2 + margin + i * 25) + ")"; 
+         });
+
+
+      legend.append("rect")
+        .attr("x", 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill",function(d) { return d.data[0]; });
+
+      legend.append("text")
+        .attr("x", 44)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .text(function(d) { return d.data[1]; });
+}
 function drawRectange(data){
 
   console.log(data);
@@ -423,12 +594,12 @@ d3.csv("baise.csv").then(function(data) {
   for (const [key, value] of Object.entries(stars)) {
     starData.push({  grade: key, score: value});
     starData.sort(function(a, b) {
-      return parseFloat(a.grade) - parseFloat(b.grade);
+      return parseFloat(a.score) - parseFloat(b.score);
     })
   }
 
   var total = data.length;
   console.log(starData);
     drawRectange(starData);
-    drawDonutChart(stars,data.length);
+    drawDonutChart2(stars,data.length);
 });
