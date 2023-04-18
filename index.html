@@ -21,12 +21,38 @@
     padding: 10px;
     opacity: 0;
   }*/
+
+  div.tooltip {	
+    position: absolute;			
+    text-align: center;								
+    padding: .2rem;				
+    background: #313639;
+    color: #f9f9f9;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;
+    font-size: .7rem;			
+}
+
+div.donut-tip {	
+    position: absolute;			
+    text-align: center;								
+    padding: .5rem;				
+    background: #FFFFFF;
+    color: #313639;	
+    border: 1px solid #313639;		
+    border-radius: 8px;			
+    pointer-events: none;
+    font-size: 1.3rem;			
+}
 </style>
 </head>
 <body>
   <h1>多样的”《青蛇劫起》影评</h1>
 
   <h3>8月1号前10名</h3>
+  <div id="chart"></div>
+  <div id="pie"></div>
   <table id="example" class="display">
         <thead>
             <tr>
@@ -65,8 +91,6 @@
             </tr>
         </thead>
   </table>
-  <div id="chart"></div>
-  <div id="pie"></div>
   <script src="script.js"></script>
 </body>
 </html>

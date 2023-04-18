@@ -20,86 +20,9 @@ function getTopDateData(data,month,day){
     return sortedList;
 }
 
-function drawPieChart(data){
-    //Set the dimensions and margins of the graph
-    var width = 1000;
-    var height = 450;
-    var margin = 40;
-
-    // The radius of the pieplot is half the width or height
-    var radius = Math.min(width, height) / 2 - margin;
-
-    var color = d3.scaleOrdinal(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c','#377eb8','#ff7f00','#984ea3']);
-
-
-    // Append the svg object to the div
-    var svg = d3.select("#pie")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .append("g")
-      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-    // Create the pie chart using d3.pie()
-    var data = [
-      {score: 133, grade: 2, percent: "0.0065"},
-      {score: 452, grade: 3, percent: "0.0220"},
-      {score: 1655, grade: 4, percent: "0.0804"},
-      {score: 11643, grade: 5, percent: "0.5656"},
-      {score: 807, grade: 1.5, percent: "0.0392"},
-      {score: 458, grade: 2.5, percent: "0.0223"},
-      {score: 1106, grade: 3.5, percent: "0.0537"},
-      {score: 4330, grade: 4.5, percent: "0.2104"}
-    ];
-
-    var pie = d3.pie()
-      .value(function(d) { return d.score; })
-      .sort(null);
-
-    var data_ready = pie(data);
-
-    // Create the arcs for each slice of the pie using d3.arc()
-    var arc = d3.arc()
-      .innerRadius(0)
-      .outerRadius(radius);
-
-    // Append the path for each slice of the pie
-    svg.selectAll('mySlices')
-      .data(data_ready)
-      .enter()
-      .append('path')
-      .attr('d', arc)
-      .attr('fill', function(d) { return color(d.data.grade); })
-      .attr("stroke", "white")
-      .style("stroke-width", "2px")
-      .style("stroke-width", "2px")
-      .style("opacity", 1);
-
-    // Add a legend to the pie chart
-    var legend = svg.selectAll(".legend")
-      .data(data_ready)
-      .enter().append("g")
-      .attr("class", "legend")
-      .attr("fill", function(d) { return color(d.data.percent); })
-      .attr("transform", function(d, i) { return "translate(" + (-width / 2 + margin) + "," + (-height / 2 + margin + i * 25) + ")"; });
-
-
-    legend.append("rect")
-      .attr("x", 18)
-      .attr("width", 18)
-      .attr("height", 18)
-      .style("fill",function(d) { return d.data.grade; });
-
-    legend.append("text")
-      .attr("x", 44)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .text(function(d) { return "Grade " + d.data.score; });
-}
-
-function drawDonutChart(starData){
+function drawDonutChart(starData,length){
     // set the dimensions and margins of the graph
-    const width = 800,
+    const width = 1000,
         height = 450,
         margin = 40;
 
@@ -114,9 +37,11 @@ function drawDonutChart(starData){
       .append("g")
         .attr("transform", `translate(${width/2},${height/2})`);
 
-    // Create dummy data
-    const data = {a: 9, b: 20, c:30, d:8, e:12, f:3, g:7, h:14}
-
+    
+    var donutTip = d3.select("body").append("div")
+        .attr("class", "donut-tip")
+        .style("opacity", 0);
+    
     // set the color scale
     const color = d3.scaleOrdinal()
       .domain(["1.5", "2.0", "c", "d", "e", "f", "g", "h"])
@@ -127,6 +52,7 @@ function drawDonutChart(starData){
     const pie = d3.pie()
       .sort(null) // Do not sort group by size
       .value(d => d[1])
+    console.log(pie(Object.entries(starData)));
     const data_ready = pie(Object.entries(starData))
 
     // The arc generator
@@ -149,6 +75,29 @@ function drawDonutChart(starData){
       .attr("stroke", "white")
       .style("stroke-width", "2px")
       .style("opacity", 0.7)
+      .on('mouseover', function (d, i) {
+        d3.select(this).transition()
+            .duration('50')
+            .attr('opacity', '.65');
+        donutTip.transition()
+            .duration(50)
+            .style("opacity", 1);
+        console.log(i);
+        console.log(d)
+        let num = (i.value/length * 100).toFixed(2).toString() + '%';
+        donutTip.html(num)
+            .style("left", (d.pageX + 10) + "px")
+            .style("top", (d.pageY- 15) + "px");
+
+    })
+    .on('mouseout', function (d, i) {
+        d3.select(this).transition()
+            .duration('50')
+            .attr('opacity', '1');
+        donutTip.transition()
+            .duration('50')
+            .style("opacity", 0);
+    });
 
     // Add the polylines between chart and labels:
     svg
@@ -171,8 +120,12 @@ function drawDonutChart(starData){
     svg
       .selectAll('allLabels')
       .data(data_ready)
+      .style("fill", function(d) { return color(d.data[0]); })
       .join('text')
-        .text(d => d.data[1])
+        .text(function(d){ 
+          //
+          return "评分:" +d.data[0] + "人数:" + d.value + "\n" + "占比:" + (d.value / length * 100).toFixed(2) + "%";
+        })
         .attr('transform', function(d) {
             const pos = outerArc.centroid(d);
             const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
@@ -191,8 +144,7 @@ function drawDonutChart(starData){
           .attr("class", "legend")
           .attr("fill", function(d) { return color(d.data[0]); })
           .attr("transform", function(d, i) { 
-                console.log("translate(" + (-width / 2 + margin) + "," + (-height / 2 + margin + i * 25) + ")")
-                return "translate(" + (200) + "," + (-height / 2 + margin + i * 25) + ")"; 
+                return "translate(" + (400) + "," + (-height / 2 + margin + i * 25) + ")"; 
            });
 
 
@@ -206,13 +158,12 @@ function drawDonutChart(starData){
           .attr("x", 44)
           .attr("y", 9)
           .attr("dy", ".35em")
-          .text(function(d) { return "人数 " + d.data[1]; });
+          .text(function(d) { return d.data[1]; });
 }
 
 function drawRectange(data){
-    // data.forEach(function(item){
-    //   item["percent"] = (item.score/total).toFixed(4);
-    // })
+
+  console.log(data);
 
   // set the dimensions and margins of the graph
   var margin = {top: 50, right: 50, bottom: 70, left: 100},
@@ -223,6 +174,8 @@ function drawRectange(data){
     var x = d3.scaleBand()
           .range([0, width])
           .padding(0.1);
+    
+          //线性比例尺
     var y = d3.scaleLinear()
           .range([height, 0]);
 
@@ -238,7 +191,7 @@ function drawRectange(data){
 
     var gradient = defs.append("linearGradient")
     .attr("id", "svgGradient")
-    .attr("x1", "0%")
+    .attr("x1", "100%")
     .attr("x2", "100%")
     .attr("y1", "0%")
     .attr("y2", "100%");
@@ -266,22 +219,23 @@ function drawRectange(data){
     y.domain([0, d3.max(data, function(d) { return d.score; })]);
 
     // append the rectangles for the bar chart
+    // selectAll是选择所有制定元素
+    // x：矩形左上角的 x 坐标
+    // y：矩形左上角的 y 坐标
+    // width：矩形的宽度
+    // height：矩形的高度
     svg.selectAll(".bar")
       .data(data)
-      .enter().append("rect")
+      .enter()
+      .append("rect") // append rectangle elements
       .attr("class", "bar")
       .attr("x", function(d) { return x(d.grade); })
       .attr("width", x.bandwidth())
-      .attr("y", function(d) { return y(d.score); })
-      .attr("height", function(d) { return height - y(d.score); })
-      .attr('fill', function(d, i) {
-         return "url(#" + gradient.attr(i) + ")";
-       })
+      .style("fill","url(#" + gradient.attr("id") + ")")
       .on("mousemove", function(event,d) {
           d3.select(this)
-          .style("fill", "brown");
           tooltip.style("visibility", "visible")
-          .html("Grade: " + d.grade + "<br/>Score: " + d.score)
+          .html("评分: " + d.grade + "<br/>人数: " + d.score)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 30) + "px");
       })
@@ -289,6 +243,18 @@ function drawRectange(data){
           d3.select(this).style("fill","url(#" + gradient.attr("id") + ")")
           tooltip.style("visibility", "hidden");
       })
+      .attr("y",function(d){
+          var min = y.domain()[0];
+          return y(min);
+      })
+      .transition()
+      .delay(function(d,i){
+          return i * 200;
+      })
+      .duration(500)
+      .ease(d3.easeBounce)
+      .attr("y", function(d) { return y(d.score); })
+      .attr("height", function(d) { return height - y(d.score); })
 
       // add the x Axis
       svg.append("g")
@@ -304,6 +270,38 @@ function drawRectange(data){
       // add tooltip
       var tooltip = d3.select("#chart").append("div")
         .attr("class", "tooltip");
+    
+      //添加文字元素
+      var texts = svg.selectAll(".MyText")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("class", "MyText")
+      .attr("x", function(d, i) {
+        return x(d.grade) - 20;
+      })
+      .attr("y",function(d){
+          var min = y.domain()[0];
+          return y(min);
+      })
+      .transition()
+      .delay(function(d,i){
+          return i * 200;
+      })
+      .duration(500)
+      .ease(d3.easeBounce)
+      .attr("y", function(d) {
+        return y(d.score + 600);
+      })
+      .attr("dx", function() {
+        return x.step()/ 2;
+      })
+      .attr("dy", function(d) {
+        return 20;
+      })
+      .text(function(d) {
+        return d.score;
+      });
 
 
     // add the y Axis
@@ -321,18 +319,18 @@ function drawRectange(data){
 
     // add the x axis label
     svg.append("text")
-      .attr("transform", "translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+      .attr("transform", "translate(" + width + " ," + (height + margin.top) + ")")
       .style("text-anchor", "middle")
-      .text("Grade");
+      .text("评分等级");
 
     // add the y axis label
     svg.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", 0 - margin.left)
-      .attr("x",0 - (height / 2))
+      .attr("y", 0 - margin.left/2 - 20)
+      .attr("x",-margin.top)
       .attr("dy", "1em")
       .style("text-anchor", "middle")
-      .text("影评人数");
+      .text("影评/人");
 }
 
 d3.csv("baise.csv").then(function(data) {
@@ -388,21 +386,16 @@ d3.csv("baise.csv").then(function(data) {
     ]
   } );
 
-  var stars = {1.5:0,2:0,2.5:0,3:0,3.5:0,4:0,4.5:0,5:0};
-
-  var dataSource = new Array();
-  dataSource.push({1.5:4});
-
-  var my_obj = {1.5:4};
-  console.log(my_obj["1.5"] = my_obj["1.5"] + 1);
-  console.log(my_obj);
-  console.log(dataSource);
+  var stars = {0:0,0.5:0,1:0,1.5:0,2:0,2.5:0,3:0,3.5:0,4:0,4.5:0,5:0};
 
   for (var i = data.length - 1; i >= 0; i--) {
     var ratings = parseFloat(data[i].ratings);
 
     if (ratings == 0) {
         stars["0"] += 1;
+    }
+    else if(ratings == 0.5) {
+      stars["0.5"] += 1;
     }
     else if (ratings >= 1 && ratings < 1.5) {
       stars["1"] += 1;
@@ -437,5 +430,5 @@ d3.csv("baise.csv").then(function(data) {
   var total = data.length;
   console.log(starData);
     drawRectange(starData);
-    drawDonutChart(stars);
+    drawDonutChart(stars,data.length);
 });
