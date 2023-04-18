@@ -2,17 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CSV数据横向柱状图</title>
+  <title>多样的”《青蛇劫起》影评</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
   <script src="jquery-3.5.1.js"></script>
   <script src="jquery.dataTables.min.js"></script>
+  <style>
+  /* Add some basic styling */
+  .bar {
+    fill: steelblue;
+  }
+  
+  /* Define the tooltip style */
+/*  .tooltip {
+    position: absolute;
+    background-color: white;
+    border: solid 1px gray;
+    padding: 10px;
+    opacity: 0;
+  }*/
+</style>
 </head>
 <body>
-  <h1>CSV数据横向柱状图</h1>
-  <table id="example" class="display" width="100%">
+  <h1>多样的”《青蛇劫起》影评</h1>
 
+  <h3>8月1号前10名</h3>
+  <table id="example" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>城市</th>
+                <th>评分</th>
+                <th>评论</th>
+                <th>时间</th>
+            </tr>
+        </thead>
+  </table>
+  <h3>8月2号前10名</h3>
+  <table id="example2" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>城市</th>
+                <th>评分</th>
+                <th>评论</th>
+                <th>时间</th>
+            </tr>
+        </thead>
+  </table>
+  <h3>8月3号前10名</h3>
+  <table id="example3" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>城市</th>
+                <th>评分</th>
+                <th>评论</th>
+                <th>时间</th>
+            </tr>
+        </thead>
   </table>
   <div id="chart"></div>
+  <div id="pie"></div>
   <script src="script.js"></script>
 </body>
 </html>
